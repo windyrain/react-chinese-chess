@@ -65,7 +65,7 @@ export default class ChessBoard extends Component {
 
         this.drawCell()
             .drawBorder()
-            // .drawText();
+            .drawText();
 
         return this;
     }
