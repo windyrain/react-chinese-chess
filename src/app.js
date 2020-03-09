@@ -1,5 +1,6 @@
 import React, { Component } from 'react';
 import ChessBoard from './components/ChessBoard';
+import ChessMen from './components/ChessMen';
 import './app.scss';
 
 /**
@@ -11,6 +12,7 @@ export default class ChineseChess extends Component {
         return (
             <div className="chinese-chess">
                 <ChessBoard />
+                <ChessMen />
             </div>
         );
     }

@@ -1,11 +1,12 @@
 import React, { Component } from 'react';
 import theme from './theme';
+import ChessMen from './ChessMen';
 
-const VERTICAL = 10;
-const HORIZONTAL = 9;
-const PADDING = 2;
+export const VERTICAL = 10;
+export const HORIZONTAL = 9;
+export const PADDING = 2;
 
-const cellCount = (n) => n - 1 + PADDING
+export const cellCount = (n) => n - 1 + PADDING
 
 /**
  * 象棋棋盘九纵十横
@@ -34,7 +35,7 @@ export default class ChessBoard extends Component {
     // 计算格子合适的宽度
     computeCellWidth() {
         // 屏幕宽度
-        const width = document.documentElement.clientWidth - 40;
+        const width = document.documentElement.clientWidth;
         // 屏幕高度
         const height = document.documentElement.clientHeight - 80;
         // 计算每个格子的宽度
