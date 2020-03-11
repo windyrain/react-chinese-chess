@@ -92,39 +92,7 @@ export default class ChessMen extends Component {
         } else {
             canvas = document.createElement('canvas');
             chessBoard.appendChild(canvas);
-            canvas.addEventListener('click', (e) => {
-                const j = Math.round(e.layerX / cellWidth) - PADDING / 2;
-                const i = Math.round(e.layerY / cellWidth) - PADDING / 2;
-
-                if ( i < 0 || i > 9 || j < 0 || j > 10) return;
-
-                if (!this.isBlink) {
-                    this.blink(i, j);
-                    this.lastI = i;
-                    this.lastJ = j;
-                    this.lastColor = String(chessMen[i][j]).split('')[0];
-                } else {
-                    this.unblink(i, j);
-
-                    const chessMan = chessMen[i][j];
-                    const color = String(chessMan).split('')[0];
-
-                    if (chessMan === 0 || this.lastColor !== color) {
-                        var temp = chessMen[this.lastI][this.lastJ];
-                        chessMen[i][j] = temp;
-                        chessMen[this.lastI][this.lastJ] = 0;
-                        this.draw();
-                        return;
-                    }
-
-                    if (i !== this.lastI || j !== this.lastJ) {
-                        this.blink(i, j);
-                        this.lastI = i;
-                        this.lastJ = j;
-                        return;
-                    }
-                }
-            });
+            canvas.addEventListener('click', this.handleChessClick);
         }
         
         canvas.width = cellWidth * cellCount(HORIZONTAL);
@@ -200,7 +168,7 @@ export default class ChessMen extends Component {
         this.isBlink = true;
         const func = () => {
             this.clearChessman(i, j);
-            setTimeout(() => {
+            this.blinkTimeout = setTimeout(() => {
                 this.drawChessman(i, j);
             }, 500);
         }
@@ -211,7 +179,7 @@ export default class ChessMen extends Component {
         func();
     }
 
-    unblink(i, j) {
+    unblink() {
         this.isBlink = false;
         clearInterval(this.blinkInterval);
     }
@@ -255,6 +223,192 @@ export default class ChessMen extends Component {
     componentWillUnmount() {
         clearTimeout(this.timeout);
         window.removeEventListener('resize', this.handleResize);
+    }
+
+    handleChessClick = (e) => {
+        const { cellWidth } = this;
+        const j = Math.round(e.layerX / cellWidth) - PADDING / 2;
+        const i = Math.round(e.layerY / cellWidth) - PADDING / 2;
+
+        // 超越边界
+        if ( i < 0 || i > 9 || j < 0 || j > 8) return;
+
+        // 无闪烁棋子，且点击为空位的时候，直接返回
+        if (!this.isBlink && chessMen[i][j] === 0) return; 
+
+        if (!this.isBlink) {
+            this.blink(i, j);
+            this.lastI = i;
+            this.lastJ = j;
+            this.lastColor = Number(String(chessMen[i][j]).split('')[0]);
+        } else {
+            this.unblink();
+
+            if (this.isShouldMove(i, j)) {
+                var temp = chessMen[this.lastI][this.lastJ];
+                chessMen[i][j] = temp;
+                chessMen[this.lastI][this.lastJ] = 0;
+                this.draw();
+                return;
+            }
+
+            if ((i !== this.lastI || j !== this.lastJ) && chessMen[i][j] !== 0) {
+                this.blink(i, j);
+                this.lastI = i;
+                this.lastJ = j;
+                return;
+            }
+        }
+    }
+
+    isShouldMove = (i, j) => {
+        const chessMan = chessMen[this.lastI][this.lastJ];
+        const chessInfo = String(chessMan).split('');
+        const chessColor = Number(chessInfo[0]);
+        const chessType = Number(chessInfo[1]);
+        const isRed = COLOR_TYPE.RED === chessColor;
+
+        // 同颜色不应该移动
+        if (this.lastColor ===  Number(String(chessMen[i][j]).split('')[0])) return;
+        // 位置未变，不需要移动
+        if (this.lastI === i && this.lastJ === j) return;
+
+        let chessCount = 0;
+
+        switch (chessType) {
+            case 0:
+                if (isRed) {
+                    if ((this.lastI - i === 1 && this.lastJ - j === 0) ||
+                        (Math.abs(this.lastJ - j) === 1 && this.lastI - i === 0 && i <= 4)) {
+                        return true;
+                    }
+                } else {
+                    if ((this.lastI - i === -1 && this.lastJ - j === 0) || 
+                        (Math.abs(this.lastJ - j) === 1 && this.lastI - i === 0 && i > 4)) {
+                        return true;
+                    }
+                }
+                break;
+            case 1:
+                if ((Math.abs(this.lastI - i) === 1 && this.lastJ === j) || 
+                    (Math.abs(this.lastJ - j) === 1 && this.lastI === i)) {
+                    if (isRed) {
+                        if (['93', '94', '95', '83', '84', '85', '73', '74', '75'].includes(`${i}${j}`)) return true;
+                    } else {
+                        if (['03', '04', '05', '13', '14', '15', '23', '24', '25'].includes(`${i}${j}`)) return true;
+                    }
+                }
+                break;
+            case 2:
+                if ((Math.abs(this.lastI - i) === 1 && Math.abs(this.lastJ - j) === 1) || 
+                    (Math.abs(this.lastJ - j) === 1 && Math.abs(this.lastI - i) === 1)) {
+                    if (isRed) {
+                        if (['93', '95', '84', '73', '75'].includes(`${i}${j}`)) return true;
+                    } else {
+                        if (['03', '05', '14', '23', '25'].includes(`${i}${j}`)) return true;
+                    }
+                }
+                break;
+            case 3:
+                if (((Math.abs(this.lastI - i) === 2 && Math.abs(this.lastJ - j) === 2) || 
+                    (Math.abs(this.lastJ - j) === 2 && Math.abs(this.lastI - i) === 2)) && 
+                    chessMen[(this.lastI + i) / 2][(this.lastJ + j) / 2] === 0) {
+                    if (isRed) {
+                        if (i > 4) return true;
+                    } else {
+                        if (i <= 4) return true;
+                    }
+                }
+                break;
+            case 4:
+                // 如果纵向移动
+                if (this.lastJ === j) {
+                    let start, end;
+
+                    if (i > this.lastI) {
+                        start = this.lastI;
+                        end = i;
+                    } else {
+                        start = i;
+                        end = this.lastI;
+                    }
+
+                    for (let m = start; m <= end; m++) {
+                        if (chessMen[m][j] !== 0) {
+                            chessCount++;
+                        }
+                    }
+                    return chessCount === 1 || chessCount === 2;
+                }
+
+                // 如何横向移动
+                if (this.lastI === i) {
+                    let start, end;
+                    
+                    if (j < this.lastJ) {
+                        start = j;
+                        end = this.lastJ;
+                    } else {
+                        start = this.lastJ;
+                        end = j;
+                    }
+
+                    for (let m = start; m <= end; m++) {
+                        if (chessMen[i][m] !== 0) {
+                            chessCount++;
+                        }
+                    }
+                    return chessCount === 1 || chessCount === 2;
+                }
+                break;
+            case 5:
+                if (((Math.abs(this.lastI - i) === 2 && Math.abs(this.lastJ - j) === 1) && chessMen[(this.lastI + i) / 2][this.lastJ] === 0 )|| 
+                    ((Math.abs(this.lastJ - j) === 2 && Math.abs(this.lastI - i) === 1) && chessMen[this.lastI][(this.lastJ + j) / 2] === 0)) {
+                        return true;
+                }
+                break;
+            case 6:
+                // 如果纵向移动
+                if (this.lastJ === j) {
+                    let start, end;
+
+                    if (i > this.lastI) {
+                        start = this.lastI;
+                        end = i;
+                    } else {
+                        start = i;
+                        end = this.lastI;
+                    }
+
+                    for (let m = start; m <= end; m++) {
+                        if (chessMen[m][j] !== 0) {
+                            chessCount++;
+                        }
+                    }
+                    return chessCount === 1 || chessCount === 3;
+                }
+
+                // 如何横向移动
+                if (this.lastI === i) {
+                    let start, end;
+                    
+                    if (j < this.lastJ) {
+                        start = j;
+                        end = this.lastJ;
+                    } else {
+                        start = this.lastJ;
+                        end = j;
+                    }
+
+                    for (let m = start; m <= end; m++) {
+                        if (chessMen[i][m] !== 0) {
+                            chessCount++
+                        }
+                    }
+                    return chessCount === 1 || chessCount === 3;
+                }
+                break;
+        }
     }
 
     render() {
