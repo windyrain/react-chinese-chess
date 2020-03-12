@@ -1,0 +1,20 @@
+.chinese-chess {
+  width: 100%;
+  height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background: url("/background.b1884479.jpeg") center center no-repeat;
+  background-size: cover;
+  padding: 80px 40px;
+  box-sizing: border-box;
+}
+.chinese-chess .chess-men {
+  position: absolute;
+}
+html, body {
+  margin: 0;
+  padding: 0;
+}
+
+/*# sourceMappingURL=/src.a2b27638.css.map */
