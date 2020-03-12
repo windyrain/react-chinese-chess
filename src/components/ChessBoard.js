@@ -23,6 +23,8 @@ export default class ChessBoard extends Component {
     cellWidth;
     // resize timeout
     timeout;
+    // 首次渲染
+    isFirst = true;
 
     componentDidMount() {
         // 计算格子宽度后，绘制棋盘
@@ -157,17 +159,28 @@ export default class ChessBoard extends Component {
 
     // 绘制文字
     drawText() {
-        const { ctx, cellWidth, theme } = this;
-        const { textColor } = theme;
+        const func = () => {
+            const { ctx, cellWidth, theme } = this;
+            const { textColor } = theme;
+    
+            const chuheText = '楚河';
+            const hanjieText = '漢界';
+            const fontSize = cellWidth * 0.8;
+    
+            ctx.font = `${fontSize}px STKaiti`;
+            ctx.fillStyle = textColor;
+            ctx.fillText(chuheText, (PADDING / 2 + 1.2) * cellWidth , (PADDING / 2 + 4.8) * cellWidth);
+            ctx.fillText(hanjieText, (PADDING / 2 + 5.2) * cellWidth , (PADDING / 2 + 4.8) * cellWidth);
+        };
 
-        const chuheText = '楚河';
-        const hanjieText = '漢界';
-        const fontSize = cellWidth * 0.8;
-
-        ctx.font = `${fontSize}px STKaiti`;
-        ctx.fillStyle = textColor;
-        ctx.fillText(chuheText, (PADDING / 2 + 1.2) * cellWidth , (PADDING / 2 + 4.8) * cellWidth);
-        ctx.fillText(hanjieText, (PADDING / 2 + 5.2) * cellWidth , (PADDING / 2 + 4.8) * cellWidth);
+        if (this.isFirst) {
+            setTimeout(() => {
+                func();
+            }, 500);
+            this.isFirst = false
+        } else {
+            func();
+        }
     }
 
     moveTo(x, y, cellWidth = this.cellWidth) {
