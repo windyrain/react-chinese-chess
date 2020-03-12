@@ -60,11 +60,15 @@ export default class ChessMen extends Component {
     lastI = 0;
     lastJ = 0;
     lastColor;
+    // 记录轮到谁走了
+    isRedTurn = true;
 
     componentDidMount() {
         // 计算格子宽度后，绘制棋盘
-        this.computeCellWidth()
+        setTimeout(() => {
+            this.computeCellWidth()
             .draw();
+        }, 500);
 
         window.addEventListener('resize', this.handleResize);
     }
@@ -233,14 +237,19 @@ export default class ChessMen extends Component {
         // 超越边界
         if ( i < 0 || i > 9 || j < 0 || j > 8) return;
 
+        const chessMan = chessMen[i][j];
+        const chessColor = Number(String(chessMan).split('')[0]);
+
         // 无闪烁棋子，且点击为空位的时候，直接返回
-        if (!this.isBlink && chessMen[i][j] === 0) return; 
+        if (!this.isBlink && chessMan === 0) return; 
+        if (!this.isBlink && chessColor === COLOR_TYPE.BLACK && this.isRedTurn) return;
+        if (!this.isBlink && chessColor === COLOR_TYPE.RED && !this.isRedTurn) return;
 
         if (!this.isBlink) {
             this.blink(i, j);
             this.lastI = i;
             this.lastJ = j;
-            this.lastColor = Number(String(chessMen[i][j]).split('')[0]);
+            this.lastColor = chessColor;
         } else {
             this.unblink();
 
@@ -249,6 +258,7 @@ export default class ChessMen extends Component {
                 chessMen[i][j] = temp;
                 chessMen[this.lastI][this.lastJ] = 0;
                 this.draw();
+                this.isRedTurn = !this.isRedTurn;
                 return;
             }
 
