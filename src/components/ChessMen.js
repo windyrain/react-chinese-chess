@@ -263,6 +263,8 @@ export default class ChessMen extends Component {
             }
 
             if ((i !== this.lastI || j !== this.lastJ) && chessMen[i][j] !== 0) {
+                if (chessColor === COLOR_TYPE.BLACK && this.isRedTurn) return;
+                if (chessColor === COLOR_TYPE.RED && !this.isRedTurn) return;
                 this.blink(i, j);
                 this.lastI = i;
                 this.lastJ = j;
@@ -283,7 +285,7 @@ export default class ChessMen extends Component {
         // 位置未变，不需要移动
         if (this.lastI === i && this.lastJ === j) return;
 
-        let chessCount = 0;
+        let chessCount = 0, isEndByChess = false;
 
         switch (chessType) {
             case 0:
@@ -346,9 +348,13 @@ export default class ChessMen extends Component {
                     for (let m = start; m <= end; m++) {
                         if (chessMen[m][j] !== 0) {
                             chessCount++;
+
+                            if (m === i) {
+                                isEndByChess = true;
+                            }
                         }
                     }
-                    return chessCount === 1 || chessCount === 2;
+                    return chessCount === 1 || (chessCount === 2 && isEndByChess);
                 }
 
                 // 如何横向移动
@@ -366,9 +372,13 @@ export default class ChessMen extends Component {
                     for (let m = start; m <= end; m++) {
                         if (chessMen[i][m] !== 0) {
                             chessCount++;
+
+                            if (m === j) {
+                                isEndByChess = true;
+                            }
                         }
                     }
-                    return chessCount === 1 || chessCount === 2;
+                    return chessCount === 1 || (chessCount === 2 && isEndByChess);
                 }
                 break;
             case 5:
@@ -393,9 +403,13 @@ export default class ChessMen extends Component {
                     for (let m = start; m <= end; m++) {
                         if (chessMen[m][j] !== 0) {
                             chessCount++;
+
+                            if (m === i) {
+                                isEndByChess = true;
+                            }
                         }
                     }
-                    return chessCount === 1 || chessCount === 3;
+                    return chessCount === 1 || (chessCount === 3 && isEndByChess);
                 }
 
                 // 如何横向移动
@@ -412,10 +426,14 @@ export default class ChessMen extends Component {
 
                     for (let m = start; m <= end; m++) {
                         if (chessMen[i][m] !== 0) {
-                            chessCount++
+                            chessCount++;
+
+                            if (m === j) {
+                                isEndByChess = true;
+                            }
                         }
                     }
-                    return chessCount === 1 || chessCount === 3;
+                    return chessCount === 1 || (chessCount === 3 && isEndByChess);
                 }
                 break;
         }
