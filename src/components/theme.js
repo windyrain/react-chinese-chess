@@ -4,7 +4,7 @@ export default () => {
         // 棋盘
         lineWidth: 1,
         lineColor: '#221c15',
-        background: '#ddba84dd',
+        background: '#ddba84',
         borderWidth: 1.5,
         borderColor: '#221c15',
         borderDistance: 4,
