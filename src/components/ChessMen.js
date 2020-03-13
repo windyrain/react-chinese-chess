@@ -2,6 +2,8 @@ import React, { Component } from 'react';
 import { cellCount, VERTICAL, HORIZONTAL, PADDING } from "./ChessBoard";
 import theme from './theme';
 
+const scale = 0.5;
+
 const chessMen = [
     [241, 251, 231, 221, 211, 222, 232, 252, 242],
     [0,   0,   0,   0,   0,   0,   0,   0,   0],
@@ -80,7 +82,7 @@ export default class ChessMen extends Component {
         // 屏幕高度
         const height = document.documentElement.clientHeight - 80;
         // 计算每个格子的宽度
-        this.cellWidth = Math.min(width / cellCount(HORIZONTAL) , height / cellCount(VERTICAL));
+        this.cellWidth = Math.min(width / cellCount(HORIZONTAL) , height / cellCount(VERTICAL)) * (1 / scale);
 
         return this;
     }
@@ -101,6 +103,7 @@ export default class ChessMen extends Component {
         
         canvas.width = cellWidth * cellCount(HORIZONTAL);
         canvas.height = cellWidth * cellCount(VERTICAL);
+        canvas.style.transform = `scale(${scale})`;
 
         this.canvas = canvas;
         this.ctx = canvas.getContext('2d');
@@ -230,8 +233,8 @@ export default class ChessMen extends Component {
 
     handleChessClick = (e) => {
         const { cellWidth } = this;
-        const j = Math.round(e.layerX / cellWidth) - PADDING / 2;
-        const i = Math.round(e.layerY / cellWidth) - PADDING / 2;
+        const j = Math.round(e.offsetX / cellWidth) - PADDING / 2;
+        const i = Math.round(e.offsetY / cellWidth) - PADDING / 2;
 
         // 超越边界
         if ( i < 0 || i > 9 || j < 0 || j > 8) return;
