@@ -105,6 +105,8 @@ export default class ChessMen extends Component {
         this.canvas = canvas;
         this.ctx = canvas.getContext('2d');
         this.theme = theme();
+        this.ctx.fillStyle = '#ffffff00'; // 追加设置透明，华为P30不设置会是黑色
+        this.ctx.fillRect(0, 0, canvas.width, canvas.height);
 
         this.drawAll();
 
