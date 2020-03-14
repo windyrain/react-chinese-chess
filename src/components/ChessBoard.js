@@ -39,7 +39,7 @@ export default class ChessBoard extends Component {
         // 屏幕宽度
         const width = document.documentElement.clientWidth;
         // 屏幕高度
-        const height = document.documentElement.clientHeight - 80;
+        const height = document.documentElement.clientHeight - 100;
         // 计算每个格子的宽度
         this.cellWidth = Math.min(width / cellCount(HORIZONTAL) , height / cellCount(VERTICAL));
 

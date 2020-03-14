@@ -6,11 +6,72 @@
     align-items: center;
     background: url('../asset/images/background.jpeg') center center no-repeat;
     background-size: cover;
-    padding: 80px 40px;
+    padding: 100px 40px;
     box-sizing: border-box;
 
 
     .chess-men {
-        position: absolute;
+        position: fixed;
+
+        .btn-start {
+            position: fixed;
+            left: 50%;
+            bottom: 10px;
+            margin-left: -40px;
+            width: 80px;
+            height: 20px;
+            padding: 4px;
+            background: #d8bb8b;
+            text-align: center;;
+            color: #000;
+            border-radius: 8px;
+            cursor: pointer;
+        }
+
+        .game-modal {
+
+            .game-modal-mask {
+                position: fixed;
+                top: 0;
+                left: 0;
+                bottom: 0;
+                right: 0;
+                background: rgba(0, 0, 0, .6);
+                z-index: 1000;
+            }
+
+            .game-modal-content {
+                position: fixed;
+                top: 50%;
+                left: 50%;
+                width: 200px;
+                height: 300px;
+                margin-left: -100px;
+                margin-top: -150px;
+                background: rgb(159, 121, 48);
+                z-index: 1000;
+                padding: 12px;
+
+                .game-item {
+                    display: flex;
+                    align-items: center;
+                    height: 30px;
+                }
+
+                .game-btn {
+                    position: absolute;
+                    left: 50%;
+                    margin-left: -30px;
+                    bottom: 12px;
+                    width: 60px;
+                    height: 20px;
+                    padding: 4px;
+                    border-radius: 8px;
+                    text-align: center;
+                    background: #6a3a3a;
+                    cursor: pointer;
+                }
+            }
+        }
     }
 }
