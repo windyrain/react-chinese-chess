@@ -3,6 +3,8 @@ import io from 'socket.io-client';
 import { cellCount, VERTICAL, HORIZONTAL, PADDING } from "./ChessBoard";
 import theme from './theme';
 
+const host = window.location.href.indexOf('oneadvise.cn') > - 1 ? 'http://www.oneadvise.cn' : 'http://localhost';
+
 const scale = 0.5;
 
 const chessMen = [
@@ -68,19 +70,16 @@ export default class ChessMen extends Component {
     isRedTurn = true;
     // 记录你是哪一方
     isRed = true;
+    // 记录是否是2个人坐在一起玩
+    isWithPerson2 = false;
 
     state = {
         isShowModel: false,
-        joinType: 'start'
+        isReady: false, // 状态是否就绪
+        joinType: 'single'
     };
 
     componentDidMount() {
-        // 计算格子宽度后，绘制棋盘
-        setTimeout(() => {
-            this.computeCellWidth()
-            .draw();
-        }, 500);
-
         window.addEventListener('resize', this.handleResize);
     }
 
@@ -230,6 +229,8 @@ export default class ChessMen extends Component {
     handleResize = () => {
         clearTimeout(this.timeout);
         this.timeout = setTimeout(() => {
+            if (!this.state.isReady) return;
+
             this.computeCellWidth()
                 .draw();
         }, 200);
@@ -255,8 +256,8 @@ export default class ChessMen extends Component {
         if (!this.isBlink && chessMan === 0) return; 
         if (!this.isBlink && chessColor === COLOR_TYPE.BLACK && this.isRedTurn) return;
         if (!this.isBlink && chessColor === COLOR_TYPE.RED && !this.isRedTurn) return;
-        if (!this.isBlink && chessColor === COLOR_TYPE.BLACK && this.isRed) return;
-        if (!this.isBlink && chessColor === COLOR_TYPE.RED && !this.isRed) return;
+        if (!this.isBlink && chessColor === COLOR_TYPE.BLACK && this.isRed && !this.isWithPerson2) return;
+        if (!this.isBlink && chessColor === COLOR_TYPE.RED && !this.isRed && !this.isWithPerson2) return;
 
         if (!this.isBlink) {
             this.blink(i, j);
@@ -271,11 +272,14 @@ export default class ChessMen extends Component {
                 chessMen[i][j] = temp;
                 chessMen[this.lastI][this.lastJ] = 0;
                 this.draw();
-                socketIO.emit('position', {
-                    roomId: this.roomId,
-                    position: [this.lastI, this.lastJ, i, j]
-                });
                 this.isRedTurn = !this.isRedTurn;
+
+                if (this.state.joinType !== 'single') {
+                    socketIO.emit('position', {
+                        roomId: this.roomId,
+                        position: [this.lastI, this.lastJ, i, j]
+                    });
+                }
                 return;
             }
 
@@ -456,12 +460,40 @@ export default class ChessMen extends Component {
         }
     }
 
+    handleConfirm = () => {
+        if (this.state.joinType === 'single') {
+            this.single();
+        } else if (this.state.joinType === 'start') {
+            this.start();
+        } else {
+            this.join();
+        }
+    }
+
+    single = () => {
+        this.setState({
+            isReady: true,
+            isShowModel: false
+        }, () => {
+            this.isWithPerson2 = true;
+            this.handleReady();
+        });
+    }
+
     start = () => {
-        socketIO = io('http://www.oneadvise.cn:6999?joinType=start');
+        socketIO = io(`${host}:6999?joinType=start`);
         socketIO.on('init', (data) => {
             this.isRed = true;
             this.roomId = data.roomId;
-            alert(`房间号：${this.roomId}`);
+            alert(`房间号：${this.roomId}，请告诉好友后耐心等待`);
+        });
+        socketIO.on('joined', () => {
+            this.setState({
+                isReady: true,
+                isShowModel: false
+            }, () => {
+                this.handleReady();
+            });
         });
         socketIO.on('position', (data) => {
             console.log(data);
@@ -484,10 +516,20 @@ export default class ChessMen extends Component {
             alert('请填写房间号');
             return;
         }
-        socketIO = io(`http://www.oneadvise.cn:6999?roomId=${roomId}`);
+        socketIO = io(`${host}:6999?roomId=${roomId}`);
         socketIO.on('init', (data) => {
+            if (!data.roomId) {
+                alert(data.message);
+                return;
+            }
             this.isRed = false;
             this.roomId = data.roomId;
+            this.setState({
+                isReady: true,
+                isShowModel: false
+            }, () => {
+                this.handleReady();
+            });
         });
         socketIO.on('position', (data) => {
             console.log(data);
@@ -500,25 +542,35 @@ export default class ChessMen extends Component {
             this.draw();
             this.isRedTurn = !this.isRedTurn;
         });
-        this.setState({
-            isShowModel: false
-        });
+    }
+
+    /**
+     * 状态已就绪
+     */
+    handleReady = () => {
+        if (!this.state.isReady) return;
+        
+        this.computeCellWidth()
+            .draw();
     }
 
     render() {
         return (
             <div className="chess-men">
-                <div className="btn-start" onClick={() => this.setState({isShowModel: !this.state.isShowModel})}>开始游戏</div>
+                {this.state.isReady ? null : <div className="btn-start" onClick={() => this.setState({isShowModel: !this.state.isShowModel})}>开始游戏</div>}
                 {
                     this.state.isShowModel ? (
                         <div className="game-modal">
                             <div className="game-modal-mask"></div>
                             <div className="game-modal-content">
+                                <div className="game-item" onClick={() => this.setState({joinType: 'single'})}>
+                                    <input type="radio" name="joinType" value="single" checked={this.state.joinType === 'single'} onChange={()=>{}} /><label>坐在一起玩</label>
+                                </div>
                                 <div className="game-item" onClick={() => this.setState({joinType: 'start'})}>
-                                    <input type="radio" name="joinType" value="start" checked={this.state.joinType === 'start'} /><label>创建游戏</label>
+                                    <input type="radio" name="joinType" value="start" checked={this.state.joinType === 'start'} onChange={()=>{}} /><label>创建游戏(联网)</label>
                                 </div>
                                 <div className="game-item" onClick={() => this.setState({joinType: 'join'})}>
-                                    <input type="radio" name="joinType" value="start" checked={this.state.joinType === 'join'} /><label>加入游戏</label>
+                                    <input type="radio" name="joinType" value="start" checked={this.state.joinType === 'join'} onChange={()=>{}} /><label>加入游戏(联网)</label>
                                 </div>
                                 {
                                     this.state.joinType === 'join' ? (
@@ -531,7 +583,7 @@ export default class ChessMen extends Component {
                                     ) : null
                                 }
 
-                                <div className="game-btn" onClick={this.state.joinType === 'start' ? this.start : () => this.join()}>确认</div>
+                                <div className="game-btn" onClick={this.handleConfirm}>确认</div>
                             </div>
                         </div>
                     ) : null
